@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "playground"
+rootProject.name = "ComposePlayground"
 include(":app")

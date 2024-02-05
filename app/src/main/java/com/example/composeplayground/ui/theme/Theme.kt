@@ -1,4 +1,4 @@
-package com.example.playground.ui.theme
+package com.example.composeplayground.ui.theme
 
 import android.app.Activity
 import android.os.Build

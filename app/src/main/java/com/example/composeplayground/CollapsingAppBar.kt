@@ -1,4 +1,4 @@
-package com.example.playground
+package com.example.composeplayground
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.playground"
+    namespace = "com.example.composeplayground"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.playground"
+        applicationId = "com.example.composeplayground"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

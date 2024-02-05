@@ -13,7 +13,7 @@
         android:theme="@style/Theme.Playground"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.composeplayground.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Playground">
             <intent-filter>
