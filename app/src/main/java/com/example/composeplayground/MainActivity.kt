@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.composeplayground.appbar.CustomCollapsingTopAppBarExample
+import com.example.composeplayground.appbar.CustomCollapsingTopAppBar
 import com.example.composeplayground.ui.theme.ComposePlaygroundTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
 //                    DefaultCollapsingTopAppBar()
-                    CustomCollapsingTopAppBarExample()
+                    CustomCollapsingTopAppBar()
                 }
             }
         }

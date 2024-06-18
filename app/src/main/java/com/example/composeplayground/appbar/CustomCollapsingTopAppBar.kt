@@ -1,6 +1,6 @@
 package com.example.composeplayground.appbar
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,13 +16,12 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -31,67 +30,82 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlin.math.absoluteValue
 
 private val collapsedHeight = 64.dp
-private val expandedHeight = 152.dp
-
-// Height needed to be collapsed
-private val collapseHeight = expandedHeight - collapsedHeight
+private val appbarHeight = 152.dp
+val collapseHeight = appbarHeight - collapsedHeight
 
 @Composable
-fun CustomCollapsingTopAppBarExample() {
+fun CustomCollapsingTopAppBar() {
 
-    val appBarCollapseHeightPx = with(LocalDensity.current) {
-        collapseHeight.roundToPx().toFloat()
-    }
+    val collapseHeightPx = with(LocalDensity.current) { collapseHeight.toPx() }
+    var collapseOffsetHeightPx by remember { mutableFloatStateOf(0f) }
 
-    val appBarCollapseOffsetHeightPx = remember { mutableFloatStateOf(0f) }
-    val appBarCollapseOffsetHeightDp = with(LocalDensity.current) {
-        appBarCollapseOffsetHeightPx.floatValue.toDp()
-    }
-    val appBarHeight = expandedHeight + appBarCollapseOffsetHeightDp
+    val collapseOffsetHeightDp = with(LocalDensity.current) { collapseOffsetHeightPx.toDp() }
+    val height = appbarHeight + collapseOffsetHeightDp
 
-    val isCollapsed by remember {
-        derivedStateOf {
-            appBarCollapseHeightPx == appBarCollapseOffsetHeightPx.floatValue.absoluteValue
+    val enterAlwaysNestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                val previousOffset = collapseOffsetHeightPx
+                val newOffset = collapseOffsetHeightPx + delta
+                collapseOffsetHeightPx = newOffset.coerceIn(-collapseHeightPx, 0f)
+                return if (previousOffset != collapseOffsetHeightPx) {
+                    // We are in the middle of top app bar collapse
+                    available
+                } else {
+                    Offset.Zero
+                }
+            }
         }
     }
 
-    val nestedScrollConnection = remember {
+    val exitAlwaysNestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                // try to consume before LazyColumn to collapse toolbar if needed, hence pre-scroll
                 val delta = available.y
-                val newOffset = appBarCollapseOffsetHeightPx.floatValue + delta
-                appBarCollapseOffsetHeightPx.floatValue =
-                    newOffset.coerceIn(-appBarCollapseHeightPx, 0f)
-                // here's the catch: let's pretend we consumed 0 in any case, since we want
-                // LazyColumn to scroll anyway for good UX
-                // We're basically watching scroll without taking it
+
+                // if scrolling down, don't consume anything
+                if (delta > 0f) return Offset.Zero
+
+                val previousOffset = collapseOffsetHeightPx
+                val newOffset = collapseOffsetHeightPx + delta
+                collapseOffsetHeightPx = newOffset.coerceIn(-collapseHeightPx, 0f)
+                return if (previousOffset != collapseOffsetHeightPx) {
+                    // We are in the middle of top app bar collapse
+                    available
+                } else {
+                    Offset.Zero
+                }
+            }
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                // change height of top app bar when scrolling all the way down and
+                // child has finished scrolling
+                if (consumed.y >= 0f && available.y > 0f) {
+                    val prevOffset = collapseOffsetHeightPx
+                    val newOffset = collapseOffsetHeightPx + available.y
+                    collapseOffsetHeightPx = newOffset.coerceIn(-collapseHeightPx, 0f)
+                    return Offset(x = 0f, y = (collapseOffsetHeightPx - prevOffset))
+                }
+
                 return Offset.Zero
             }
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(nestedScrollConnection)
-    ) {
-        CustomCollapsingTopAppBar(
-            isCollapsed = isCollapsed,
-            modifier = Modifier.height(appBarHeight)
-        )
-
+    Column(Modifier.nestedScroll(enterAlwaysNestedScrollConnection)) {
+        CustomTopAppBar(Modifier.height(height))
         LazyColumn(
             modifier = Modifier.fillMaxWidth()
         ) {
-            items(
-                items = (1..50).map { it }
-            ) {
+            items(items = (1..50).map { it }) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -106,46 +120,36 @@ fun CustomCollapsingTopAppBarExample() {
 }
 
 @Composable
-private fun CustomCollapsingTopAppBar(
-    isCollapsed: Boolean,
+private fun CustomTopAppBar(
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        color = Color.Green,
+    Box(
         modifier = modifier
+            .fillMaxSize()
+            .background(Color.Green)
     ) {
-        Box(Modifier.fillMaxSize()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(collapsedHeight)
-                    .align(Alignment.TopCenter)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(collapsedHeight)
+                .align(Alignment.TopCenter)
+        ) {
+            IconButton(
+                onClick = {},
+                modifier = Modifier.padding(top = 4.dp, start = 4.dp)
             ) {
-                IconButton(
-                    onClick = {},
-                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = null
-                    )
-                }
-
-                AnimatedVisibility(isCollapsed) {
-                    Text(
-                        text = "Title",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(horizontal = 10.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = null
+                )
             }
+
+            Text(
+                text = "Title",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(horizontal = 10.dp)
+            )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun CustomCollapsingAppBarPreview() {
-    CustomCollapsingTopAppBarExample()
 }

@@ -1,6 +1,5 @@
 package com.example.composeplayground.appbar
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,32 +22,36 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DefaultCollapsingTopAppBar() {
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-//    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
         topBar = {
             LargeTopAppBar(
-                title = { Text(text = "app title") },
+                title = {
+                    Text("title")
+                },
                 scrollBehavior = scrollBehavior
             )
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { padding ->
-        Column(Modifier.padding(padding)) {
-            LazyColumn(Modifier.fillMaxSize()) {
-                items(
-                    items = (1..100).map { it },
-                    key = { it }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            items(
+                items = (1..100).map { it },
+                key = { it }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .fillMaxWidth()
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .size(100.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Text(it.toString(), Modifier.padding(horizontal = 4.dp))
-                    }
+                    Text(it.toString(), Modifier.padding(horizontal = 4.dp))
                 }
             }
         }
